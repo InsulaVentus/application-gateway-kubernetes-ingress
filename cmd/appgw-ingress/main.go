@@ -193,6 +193,7 @@ func main() {
 		if agicPod != nil {
 			recorder.Event(agicPod, v1.EventTypeWarning, events.UnsupportedAppGatewaySKUTier, errorLine)
 		}
+
 		// Slow down the cycling of the AGIC pod.
 		time.Sleep(5 * time.Second)
 		klog.Fatal(errorLine)

@@ -203,7 +203,7 @@ func (c *appGwConfigBuilder) groupListenersByListenerIdentifier(cbCtx *ConfigBui
 
 	listenersByID := make(map[listenerIdentifier]*n.ApplicationGatewayHTTPListener)
 	// Update the listenerMap with the final listener lists
-	for idx, listener := range *listeners {
+	for _, listener := range *listeners {
 		port, portExists := portsByID[*listener.FrontendPort.ID]
 
 		listenerID := listenerIdentifier{
@@ -221,12 +221,21 @@ func (c *appGwConfigBuilder) groupListenersByListenerIdentifier(cbCtx *ConfigBui
 		} else {
 			klog.Errorf("Failed to find port '%s' referenced by listener '%s'", *listener.FrontendPort.ID, *listener.Name)
 		}
-		listenersByID[listenerID] = &((*listeners)[idx])
+		listenersByID[listenerID] = &listener
 
 		// add for public IP as well if only private IP is present
 		if len(*listeners) == 1 && listenerID.UsePrivateIP {
 			listenerID.UsePrivateIP = false
-			listenersByID[listenerID] = &((*listeners)[idx])
+			listenersByID[listenerID] = &listener
+		}
+	}
+
+	for listenerID, listener := range listenersByID {
+		if listenerID.UsePrivateIP {
+			listenerID.UsePrivateIP = false
+			if _, exists := listenersByID[listenerID]; !exists {
+				listenersByID[listenerID] = listener
+			}
 		}
 	}
 
